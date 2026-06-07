@@ -1,33 +1,33 @@
-const express = require("express");
-const cors = require("cors");
+const express = require('express');
+const cors = require('cors');
+require('dotenv').config();
 
-const pool = require("./database/db");
+const authRoutes       = require('./routes/authRoutes');
+const attendanceRoutes = require('./routes/attendanceRoutes');
 
-const authRoutes = require("./routes/authRoutes");
-const attendanceRoutes = require("./routes/attendanceRoutes");
 const app = express();
 
-app.use(cors());
-app.use(express.json());
-app.use("/api/attendance", attendanceRoutes);
-app.use("/api/auth", authRoutes);
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
-app.get("/", (req, res) => {
-  res.json({
-    message: "GeoAsist API funcionando"
-  });
+app.use(express.json({ limit: '10mb' }));
+
+app.use('/api/auth',       authRoutes);
+app.use('/api/attendance', attendanceRoutes);
+
+app.get('/', (req, res) => {
+  res.json({ message: 'GeoAsist API funcionando con Supabase' });
 });
 
-const PORT = 3000;
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ message: 'Error interno del servidor' });
+});
 
-pool.connect()
-  .then(() => {
-    console.log("Base de datos conectada");
-  })
-  .catch((err) => {
-    console.log(err);
-  });
-
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
 });

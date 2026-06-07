@@ -1,108 +1,91 @@
-const pool = require("../database/db");
-const bcrypt = require("bcrypt");
-const jwt = require("jsonwebtoken");
-
-require("dotenv").config();
+const supabase = require('../database/db');
 
 const register = async (req, res) => {
   try {
-
     const { nombre, correo, password, rol } = req.body;
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    if (!nombre || !correo || !password) {
+      return res.status(400).json({ message: 'Nombre, correo y password son requeridos' });
+    }
 
-    const query = `
-      INSERT INTO usuarios(nombre, correo, password, rol)
-      VALUES($1, $2, $3, $4)
-      RETURNING *
-    `;
+    const rolFinal = rol === 'admin' ? 'admin' : 'empleado';
 
-    const values = [
-      nombre,
-      correo,
-      hashedPassword,
-      rol
-    ];
+    const { data, error } = await supabase.auth.admin.createUser({
+      email: correo,
+      password,
+      email_confirm: true,
+      user_metadata: { nombre, rol: rolFinal }
+    });
 
-    const result = await pool.query(query, values);
+    if (error) {
+      return res.status(400).json({ message: error.message });
+    }
 
     res.status(201).json({
-      message: "Usuario registrado",
-      user: result.rows[0]
+      message: 'Usuario registrado correctamente',
+      user: { id: data.user.id, nombre, correo, rol: rolFinal }
     });
 
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      message: "Error servidor"
-    });
+    console.error('Error en register:', error);
+    res.status(500).json({ message: 'Error en el servidor' });
   }
 };
 
 const login = async (req, res) => {
   try {
-
     const { correo, password } = req.body;
 
-    const result = await pool.query(
-      "SELECT * FROM usuarios WHERE correo = $1",
-      [correo]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(401).json({
-        message: "Usuario no encontrado"
-      });
+    if (!correo || !password) {
+      return res.status(400).json({ message: 'Correo y password son requeridos' });
     }
 
-    const user = result.rows[0];
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: correo,
+      password
+    });
 
-    const validPassword = await bcrypt.compare(
-      password,
-      user.password
-    );
-
-    if (!validPassword) {
-      return res.status(401).json({
-        message: "Contraseña incorrecta"
-      });
+    if (error) {
+      return res.status(401).json({ message: 'Credenciales incorrectas' });
     }
 
-    const token = jwt.sign(
-      {
-        id: user.id,
-        rol: user.rol
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "8h"
-      }
-    );
+    const { data: perfil } = await supabase
+      .from('usuarios')
+      .select('id, nombre, correo, rol')
+      .eq('auth_id', data.user.id)
+      .single();
 
     res.json({
-      message: "Login exitoso",
-      token,
+      message: 'Login exitoso',
+      token: data.session.access_token,
       user: {
-        id: user.id,
-        nombre: user.nombre,
-        correo: user.correo,
-        rol: user.rol
+        id: perfil?.id,
+        nombre: perfil?.nombre,
+        correo: perfil?.correo,
+        rol: perfil?.rol
       }
     });
 
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      message: "Error servidor"
-    });
+    console.error('Error en login:', error);
+    res.status(500).json({ message: 'Error en el servidor' });
   }
 };
 
-module.exports = {
-  register,
-  login
+const getUsers = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('id, nombre, correo, rol')
+      .order('id', { ascending: true });
+
+    if (error) return res.status(500).json({ message: 'Error obteniendo usuarios' });
+
+    res.json(data);
+  } catch (error) {
+    console.error('Error en getUsers:', error);
+    res.status(500).json({ message: 'Error en el servidor' });
+  }
 };
+
+module.exports = { register, login, getUsers };

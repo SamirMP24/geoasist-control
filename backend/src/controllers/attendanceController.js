@@ -1,106 +1,98 @@
-const pool = require("../database/db");
+const supabase = require('../database/db');
 
-const registerAttendance = async (
-  req,
-  res
-) => {
+const base64ToBuffer = (base64String) => {
+  const base64Data = base64String.replace(/^data:image\/\w+;base64,/, '');
+  return Buffer.from(base64Data, 'base64');
+};
 
+const registerAttendance = async (req, res) => {
   try {
+    const { latitud, longitud, foto } = req.body;
+    const usuario_id = req.user.id;
 
-    const {
-      latitud,
-      longitud,
-      foto
-    } = req.body;
+    if (!latitud || !longitud) {
+      return res.status(400).json({ message: 'Latitud y longitud son requeridas' });
+    }
 
-    const usuario_id =
-      req.user.id;
+    let foto_url = null;
 
-    const query = `
-      INSERT INTO asistencias
-      (
-        usuario_id,
-        latitud,
-        longitud,
-        foto
-      )
-      VALUES($1, $2, $3, $4)
-      RETURNING *
-    `;
+    if (foto) {
+      const buffer = base64ToBuffer(foto);
+      const fileName = `${usuario_id}/${Date.now()}.jpg`;
 
-    const values = [
-      usuario_id,
-      latitud,
-      longitud,
-      foto
-    ];
+      const { error: storageError } = await supabase.storage
+        .from('fotos-asistencia')
+        .upload(fileName, buffer, {
+          contentType: 'image/jpeg',
+          upsert: false
+        });
 
-    const result =
-      await pool.query(
-        query,
-        values
-      );
+      if (!storageError) {
+        const { data: urlData } = supabase.storage
+          .from('fotos-asistencia')
+          .getPublicUrl(fileName);
+        foto_url = urlData.publicUrl;
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('asistencias')
+      .insert([{ usuario_id, latitud, longitud, foto_url }])
+      .select()
+      .single();
+
+    if (error) {
+      return res.status(500).json({ message: 'Error guardando asistencia' });
+    }
 
     res.status(201).json({
-      message:
-        "Asistencia registrada",
-      attendance:
-        result.rows[0]
+      message: 'Asistencia registrada correctamente',
+      attendance: data
     });
 
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      message: "Error servidor"
-    });
+    console.error('Error en registerAttendance:', error);
+    res.status(500).json({ message: 'Error en el servidor' });
   }
 };
 
-const getAttendances = async (
-  req,
-  res
-) => {
-
+const getAttendances = async (req, res) => {
   try {
+    const { data, error } = await supabase
+      .from('asistencias')
+      .select(`
+        id,
+        latitud,
+        longitud,
+        foto_url,
+        fecha,
+        usuarios (
+          nombre,
+          correo
+        )
+      `)
+      .order('fecha', { ascending: false });
 
-    const query = `
-      SELECT
-        asistencias.id,
-        usuarios.nombre,
-        usuarios.correo,
-        asistencias.latitud,
-        asistencias.longitud,
-        asistencias.foto,
-        asistencias.fecha
+    if (error) {
+      return res.status(500).json({ message: 'Error obteniendo asistencias' });
+    }
 
-      FROM asistencias
+    const formatted = data.map(a => ({
+      id: a.id,
+      nombre: a.usuarios?.nombre,
+      correo: a.usuarios?.correo,
+      latitud: a.latitud,
+      longitud: a.longitud,
+      foto: a.foto_url,
+      fecha: a.fecha
+    }));
 
-      INNER JOIN usuarios
-      ON usuarios.id =
-      asistencias.usuario_id
-
-      ORDER BY
-      asistencias.fecha DESC
-    `;
-
-    const result =
-      await pool.query(query);
-
-    res.json(result.rows);
+    res.json(formatted);
 
   } catch (error) {
-
-    console.log(error);
-
-    res.status(500).json({
-      message: "Error servidor"
-    });
+    console.error('Error en getAttendances:', error);
+    res.status(500).json({ message: 'Error en el servidor' });
   }
 };
 
-module.exports = {
-  registerAttendance,
-  getAttendances
-};
+module.exports = { registerAttendance, getAttendances };
