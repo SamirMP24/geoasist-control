@@ -112,41 +112,33 @@ function ExportButtons({
   };
 
   return (
-
-    <div className="
-      flex
-      gap-4
-      mb-6
-    ">
-
-      <button
-        onClick={exportExcel}
-        className="
-          bg-green-600
-          text-white
-          px-6
-          py-3
-          rounded-xl
-        "
-      >
-        Exportar Excel
-      </button>
-
-      <button
-        onClick={exportPDF}
-        className="
-          bg-red-600
-          text-white
-          px-6
-          py-3
-          rounded-xl
-        "
-      >
-        Exportar PDF
-      </button>
-
-    </div>
-  );
+  <div style={{ display: "flex", gap: ".5rem" }}>
+    <button
+      onClick={exportExcel}
+      style={{
+        display: "flex", alignItems: "center", gap: "6px",
+        fontSize: "12px", fontWeight: "500", color: "#2D5016",
+        background: "#eaf3de", border: "0.5px solid #c0dd97",
+        borderRadius: "8px", padding: "6px 14px", cursor: "pointer",
+      }}
+    >
+      <i className="ti ti-file-spreadsheet" style={{ fontSize: "14px" }} aria-hidden="true"></i>
+      Excel
+    </button>
+    <button
+      onClick={exportPDF}
+      style={{
+        display: "flex", alignItems: "center", gap: "6px",
+        fontSize: "12px", fontWeight: "500", color: "#fff",
+        background: "#2D5016", border: "none",
+        borderRadius: "8px", padding: "6px 14px", cursor: "pointer",
+      }}
+    >
+      <i className="ti ti-file-type-pdf" style={{ fontSize: "14px" }} aria-hidden="true"></i>
+      PDF
+    </button>
+  </div>
+);
 }
 
 export default ExportButtons;

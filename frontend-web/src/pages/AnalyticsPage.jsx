@@ -68,11 +68,7 @@ function AnalyticsPage() {
 
   return (
 
-    <div className="
-      p-10
-      min-h-screen
-      bg-gray-100
-    ">
+    <div className="p-8">
 
       <h1 className="
         text-4xl

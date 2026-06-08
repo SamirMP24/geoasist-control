@@ -5,21 +5,14 @@ function UsersPage() {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [formData, setFormData] = useState({
-    nombre: "",
-    correo: "",
-    password: "",
-    rol: "empleado",
-  });
+  const [formData, setFormData] = useState({ nombre: "", correo: "", password: "", rol: "empleado" });
   const [saving, setSaving] = useState(false);
   const [mensaje, setMensaje] = useState(null);
 
   const token = localStorage.getItem("token");
   const API_URL = import.meta.env.VITE_API_URL;
 
-  useEffect(() => {
-    loadUsuarios();
-  }, []);
+  useEffect(() => { loadUsuarios(); }, []);
 
   const loadUsuarios = async () => {
     try {
@@ -39,15 +32,12 @@ function UsersPage() {
       setMensaje({ tipo: "error", texto: "Todos los campos son requeridos" });
       return;
     }
-
     setSaving(true);
     setMensaje(null);
-
     try {
       await axios.post(`${API_URL}/api/auth/register`, formData, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       setMensaje({ tipo: "ok", texto: "Usuario creado correctamente" });
       setFormData({ nombre: "", correo: "", password: "", rol: "empleado" });
       setShowForm(false);
@@ -59,123 +49,133 @@ function UsersPage() {
     }
   };
 
+  const getInitials = (nombre) =>
+    nombre?.split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase();
+
+  const inputStyle = {
+    border: "0.5px solid #e2e8f0", borderRadius: "8px",
+    padding: "6px 12px", fontSize: "13px", color: "#1e293b",
+    background: "#fff", outline: "none", width: "100%",
+  };
+
+  const labelStyle = { fontSize: "11px", color: "#94a3b8", marginBottom: "4px", display: "block" };
+
   return (
-    <div className="p-10 min-h-screen bg-gray-100">
-      <div className="flex justify-between items-center mb-8">
+    <div className="p-8">
+
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
         <div>
-          <h1 className="text-4xl font-bold text-blue-700">Usuarios</h1>
-          <p className="text-gray-500 mt-1">Gestiona los usuarios del sistema</p>
+          <h1 style={{ fontSize: "20px", fontWeight: "500", color: "#1e293b" }}>Usuarios</h1>
+          <p style={{ fontSize: "13px", color: "#94a3b8", marginTop: "2px" }}>Gestiona los usuarios del sistema</p>
         </div>
         <button
           onClick={() => { setShowForm(!showForm); setMensaje(null); }}
-          className="bg-blue-700 hover:bg-blue-800 text-white px-6 py-3 rounded-xl transition"
+          style={{
+            display: "flex", alignItems: "center", gap: "6px",
+            fontSize: "12px", fontWeight: "500", color: "#fff",
+            background: showForm ? "#64748b" : "#2D5016",
+            border: "none", borderRadius: "8px", padding: "7px 14px", cursor: "pointer",
+          }}
         >
-          {showForm ? "Cancelar" : "+ Nuevo usuario"}
+          <i className={`ti ${showForm ? "ti-x" : "ti-plus"}`} style={{ fontSize: "14px" }} aria-hidden="true"></i>
+          {showForm ? "Cancelar" : "Nuevo usuario"}
         </button>
       </div>
 
       {/* Mensaje */}
       {mensaje && (
-        <div className={`mb-6 px-5 py-3 rounded-xl text-sm font-medium ${
-          mensaje.tipo === "ok"
-            ? "bg-green-100 text-green-700"
-            : "bg-red-100 text-red-700"
-        }`}>
+        <div style={{
+          marginBottom: "1rem", padding: "10px 14px", borderRadius: "8px", fontSize: "13px",
+          background: mensaje.tipo === "ok" ? "#eaf3de" : "#fcebeb",
+          color: mensaje.tipo === "ok" ? "#3B6D11" : "#A32D2D",
+          border: `0.5px solid ${mensaje.tipo === "ok" ? "#c0dd97" : "#f7c1c1"}`,
+        }}>
           {mensaje.texto}
         </div>
       )}
 
-      {/* Formulario nuevo usuario */}
+      {/* Formulario */}
       {showForm && (
-        <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-700 mb-4">Crear nuevo usuario</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm text-gray-500">Nombre completo</label>
-              <input
-                type="text"
-                placeholder="Juan Pérez"
-                value={formData.nombre}
-                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                className="border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
+        <div style={{ background: "#fff", border: "0.5px solid #e2e8f0", borderRadius: "12px", padding: "1.25rem", marginBottom: "1.25rem" }}>
+          <div style={{ fontSize: "13px", fontWeight: "500", color: "#1e293b", marginBottom: "1rem" }}>Crear nuevo usuario</div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: ".75rem" }}>
+            <div>
+              <label style={labelStyle}>Nombre completo</label>
+              <input type="text" placeholder="Juan Pérez" value={formData.nombre}
+                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })} style={inputStyle} />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm text-gray-500">Correo electrónico</label>
-              <input
-                type="email"
-                placeholder="juan@empresa.com"
-                value={formData.correo}
-                onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
-                className="border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
+            <div>
+              <label style={labelStyle}>Correo electrónico</label>
+              <input type="email" placeholder="juan@empresa.com" value={formData.correo}
+                onChange={(e) => setFormData({ ...formData, correo: e.target.value })} style={inputStyle} />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm text-gray-500">Contraseña</label>
-              <input
-                type="password"
-                placeholder="Mínimo 6 caracteres"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
+            <div>
+              <label style={labelStyle}>Contraseña</label>
+              <input type="password" placeholder="Mínimo 6 caracteres" value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })} style={inputStyle} />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-sm text-gray-500">Rol</label>
-              <select
-                value={formData.rol}
-                onChange={(e) => setFormData({ ...formData, rol: e.target.value })}
-                className="border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-              >
+            <div>
+              <label style={labelStyle}>Rol</label>
+              <select value={formData.rol} onChange={(e) => setFormData({ ...formData, rol: e.target.value })} style={inputStyle}>
                 <option value="empleado">Empleado</option>
                 <option value="admin">Administrador</option>
               </select>
             </div>
           </div>
-          <div className="mt-5">
-            <button
-              onClick={handleSubmit}
-              disabled={saving}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-green-300 text-white px-8 py-3 rounded-xl transition"
-            >
-              {saving ? "Creando..." : "Crear usuario"}
-            </button>
-          </div>
+          <button onClick={handleSubmit} disabled={saving} style={{
+            marginTop: "1rem", fontSize: "12px", fontWeight: "500", color: "#fff",
+            background: saving ? "#94a3b8" : "#2D5016", border: "none",
+            borderRadius: "8px", padding: "7px 18px", cursor: saving ? "not-allowed" : "pointer",
+          }}>
+            {saving ? "Creando..." : "Crear usuario"}
+          </button>
         </div>
       )}
 
-      {/* Lista de usuarios */}
-      <div className="bg-white rounded-2xl shadow-md overflow-x-auto">
+      {/* Tabla */}
+      <div style={{ background: "#fff", border: "0.5px solid #e2e8f0", borderRadius: "12px", overflow: "hidden" }}>
         {loading ? (
-          <div className="p-10 text-center text-gray-400">Cargando usuarios...</div>
+          <div style={{ padding: "3rem", textAlign: "center", color: "#94a3b8" }}>Cargando usuarios...</div>
         ) : usuarios.length === 0 ? (
-          <div className="p-10 text-center text-gray-400">No hay usuarios registrados</div>
+          <div style={{ padding: "3rem", textAlign: "center", color: "#94a3b8" }}>No hay usuarios registrados</div>
         ) : (
-          <table className="w-full text-left">
-            <thead className="bg-blue-700 text-white">
-              <tr>
-                <th className="p-4">Nombre</th>
-                <th className="p-4">Correo</th>
-                <th className="p-4">Rol</th>
-                <th className="p-4">Estado</th>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr style={{ background: "#f8fafc", borderBottom: "0.5px solid #e2e8f0" }}>
+                {["Usuario", "Correo", "Rol", "Estado"].map((h) => (
+                  <th key={h} style={{ padding: ".6rem 1rem", textAlign: "left", fontSize: "10px", fontWeight: "500", textTransform: "uppercase", letterSpacing: ".06em", color: "#94a3b8" }}>{h}</th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {usuarios.map((u) => (
-                <tr key={u.id} className="border-b hover:bg-gray-50 transition">
-                  <td className="p-4 font-medium">{u.nombre}</td>
-                  <td className="p-4 text-gray-500">{u.correo}</td>
-                  <td className="p-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      u.rol === "admin"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-600"
-                    }`}>
+                <tr key={u.id} style={{ borderBottom: "0.5px solid #f1f5f9" }}>
+                  <td style={{ padding: ".75rem 1rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      <div style={{
+                        width: "32px", height: "32px", borderRadius: "50%",
+                        background: "#e8f0e2", display: "flex", alignItems: "center",
+                        justifyContent: "center", fontSize: "11px", fontWeight: "500",
+                        color: "#2D5016", flexShrink: 0,
+                      }}>
+                        {getInitials(u.nombre)}
+                      </div>
+                      <span style={{ fontSize: "13px", fontWeight: "500", color: "#1e293b" }}>{u.nombre}</span>
+                    </div>
+                  </td>
+                  <td style={{ padding: ".75rem 1rem", fontSize: "13px", color: "#64748b" }}>{u.correo}</td>
+                  <td style={{ padding: ".75rem 1rem" }}>
+                    <span style={{
+                      fontSize: "11px", padding: "3px 10px", borderRadius: "99px", fontWeight: "500",
+                      background: u.rol === "admin" ? "rgba(201,168,76,0.15)" : "#f1f5f9",
+                      color: u.rol === "admin" ? "#854F0B" : "#64748b",
+                    }}>
                       {u.rol === "admin" ? "Administrador" : "Empleado"}
                     </span>
                   </td>
-                  <td className="p-4">
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                  <td style={{ padding: ".75rem 1rem" }}>
+                    <span style={{ fontSize: "11px", padding: "3px 10px", borderRadius: "99px", background: "#eaf3de", color: "#3B6D11" }}>
                       Activo
                     </span>
                   </td>
