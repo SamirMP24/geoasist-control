@@ -1,32 +1,20 @@
-import { supabase } from '../lib/supabase';
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 export const loginUser = async ({ correo, password }) => {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: correo,
-    password
+  const { data } = await axios.post(`${API_URL}/api/auth/login`, {
+    correo,
+    password,
   });
 
-  if (error) throw new Error(error.message);
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("user", JSON.stringify(data.user));
 
-  const { data: perfil, error: perfilError } = await supabase
-    .from('usuarios')
-    .select('id, nombre, correo, rol')
-    .eq('auth_id', data.user.id)
-    .single();
-
-  if (perfilError) throw new Error('No se pudo obtener el perfil');
-
-  const token = data.session.access_token;
-  const user  = { id: perfil.id, nombre: perfil.nombre, correo: perfil.correo, rol: perfil.rol };
-
-  localStorage.setItem('token', token);
-  localStorage.setItem('user', JSON.stringify(user));
-
-  return { token, user };
+  return data;
 };
 
 export const logoutUser = async () => {
-  await supabase.auth.signOut();
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
 };

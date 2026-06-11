@@ -49,11 +49,12 @@ const login = async (req, res) => {
       return res.status(401).json({ message: 'Credenciales incorrectas' });
     }
 
-    const { data: perfil } = await supabase
-      .from('usuarios')
-      .select('id, nombre, correo, rol')
-      .eq('auth_id', data.user.id)
-      .single();
+   const { data: perfil, error: perfilError } = await supabase
+  .from('usuarios')
+  .select('id, nombre, correo, rol')
+  .eq('auth_id', data.user.id)
+  .single();
+
 
     res.json({
       message: 'Login exitoso',
