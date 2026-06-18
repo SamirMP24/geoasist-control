@@ -1,40 +1,27 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Webcam from "react-webcam";
 import AttendanceMap from "../components/AttendanceMap";
 import { registerAttendance } from "../services/attendanceService";
-import { calculateDistance } from "../utils/distanceCalculator";
+import axios from "axios";
 
 function DashboardPage() {
   const webcamRef = useRef(null);
   const user = JSON.parse(localStorage.getItem("user"));
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(null); // { tipo: "ok"|"error", texto }
+  const [status, setStatus] = useState(null);
+
+  const API_URL = import.meta.env.VITE_API_URL;
 
   const handleAttendance = () => {
     setLoading(true);
     setStatus(null);
-
-    const officeLat = import.meta.env.VITE_OFFICE_LAT
-      ? parseFloat(import.meta.env.VITE_OFFICE_LAT)
-      : -12.046374;
-
-    const officeLon = import.meta.env.VITE_OFFICE_LON
-      ? parseFloat(import.meta.env.VITE_OFFICE_LON)
-      : -77.042793;
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         try {
           const latitud = position.coords.latitude;
           const longitud = position.coords.longitude;
-          const distance = calculateDistance(latitud, longitud, officeLat, officeLon);
-
-          if (distance > 50) {
-            setStatus({ tipo: "error", texto: `Fuera de la zona permitida — ${Math.round(distance)} m de la oficina` });
-            setLoading(false);
-            return;
-          }
 
           setLocation({ latitud, longitud });
           const foto = webcamRef.current.getScreenshot();
@@ -83,7 +70,7 @@ function DashboardPage() {
             Bienvenido, {user?.nombre}
           </div>
           <div style={{ fontSize: "12px", color: "#94a3b8", marginTop: "2px" }}>
-            {user?.rol === "admin" ? "Administrador" : "Empleado"} · Radio permitido: 50 metros
+            {user?.rol === "admin" ? "Administrador" : "Empleado"} · Registro de asistencia con GPS
           </div>
         </div>
       </div>

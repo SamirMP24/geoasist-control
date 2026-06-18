@@ -7,6 +7,8 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 
 const app = express();
 
+const configRoutes = require('./routes/configRoutes');
+
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
@@ -30,4 +32,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
+  
+  app.use('/api/config', configRoutes);
 });
