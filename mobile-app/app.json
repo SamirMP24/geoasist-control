@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "mobile-app",
-    "slug": "mobile-app",
+    "slug": "geoasist",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,10 +15,17 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
-      }
+      },
+      "package": "com.jeffsamsteam.geoasist"
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "780b672f-cf20-4b2f-ac1a-b00fe983a0ca"
+      }
+    },
+    "owner": "jeffsams-team"
   }
 }
